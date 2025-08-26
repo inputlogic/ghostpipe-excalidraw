@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  web:
+    image: ghcr.io/inputlogic/ghostpipe-excalidraw:latest
+    deploy:
+      update_config:
+        order: start-first
+      labels:
+        - traefik.enable=true
+        - traefik.swarm.network=traefik-public
+        - traefik.http.routers.excalidraw-web.rule=Host(`excalidraw.ghostpipe.dev`)
+        - traefik.http.routers.excalidraw-web.entrypoints=websecure
+        - traefik.http.routers.excalidraw-web.tls=true
+        - traefik.http.routers.excalidraw-web.tls.certresolver=myotherresolver
+        - traefik.http.services.excalidraw-web-service.loadbalancer.server.port=80
+    networks:
+      - traefik-public
+networks:
+  traefik-public:
+    external: true
+
