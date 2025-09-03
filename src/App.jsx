@@ -4,15 +4,6 @@ import { WebrtcProvider } from 'y-webrtc'
 import { Excalidraw } from "@excalidraw/excalidraw";
 import '@excalidraw/excalidraw/index.css';
 
-let synced = null
-
-const sync = (fn, value) => {
-  if (value === synced) return
-  console.log('sync', value, synced)
-  synced = value
-  fn(value)
-}
-
 const debounce = (func, delay) => {
   let timeoutId
   return (...args) => {
@@ -21,21 +12,27 @@ const debounce = (func, delay) => {
   }
 }
 
+const safeJsonParse = value => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return {}
+  }
+}
+
 const App = () => {
   const [data, setData] = useState()
   const [diff, setDiff] = useState()
   const [meta, setMeta] = useState()
   const [ydoc, setYdoc] = useState()
-  
+
   const onChange = useCallback(
     debounce((ev) => {
-      const files = ydoc?.getMap('files')
-      files.forEach((_value, key) => {
-        const value = JSON.stringify({elements: ev})
-        ydoc.transact(() => {
-          files.set(key, value), value
-        }, 'web-change')
-      })
+      const data = ydoc?.getMap('data')
+      const value = JSON.stringify({elements: ev})
+      ydoc.transact(() => {
+        data.set('content', value), value
+      }, 'web-change')
     }, 500),
     [ydoc]
   )
@@ -52,18 +49,16 @@ const App = () => {
     ydoc.getMap('meta').observe(event => {
       setMeta(ydoc.getMap('meta').toJSON())
     })
-    const filesMap = ydoc.getMap('files')
-    filesMap.observe((event, transaction) => {
+    const data = ydoc.getMap('data')
+    data.observe((event, transaction) => {
       if (transaction.origin === 'web-change') return
-      filesMap.forEach((value, key) => {
-        setData(JSON.parse(value))
-      })
+      if (!event.keysChanged.has('content')) return
+      setData(safeJsonParse(data.get('content')))
     })
-    const baseFilesMap = ydoc.getMap('base-files')
-    baseFilesMap.observe((event, transaction) => {
-      baseFilesMap.forEach((value, key) => {
-        setDiff(JSON.parse(value))
-      })
+    const baseData = ydoc.getMap('base-data')
+    baseData.observe((event, transaction) => {
+      if (!event.keysChanged.has('content')) return
+      setDiff(safeJsonParse(baseData.get('content')))
     })
     webrtcProvider.on('status', ({ status }) => {
       console.log('status', status)
