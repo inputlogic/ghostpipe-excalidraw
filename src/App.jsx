@@ -29,7 +29,7 @@ const App = () => {
   const onChange = useCallback(
     debounce((ev) => {
       const data = ydoc?.getMap('data')
-      const value = JSON.stringify({elements: ev})
+      const value = JSON.stringify({elements: ev}, null, 2)
       ydoc.transact(() => {
         data.set('content', value), value
       }, 'web-change')
