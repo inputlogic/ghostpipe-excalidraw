@@ -25,9 +25,16 @@ const App = () => {
   const [diff, setDiff] = useState()
   const [meta, setMeta] = useState()
   const [ydoc, setYdoc] = useState()
+  const excalidrawAPIRef = useRef(null)
+  const diffExcalidrawAPIRef = useRef(null)
+  const isRemoteUpdate = useRef(false)
 
   const onChange = useCallback(
     debounce((ev) => {
+      if (isRemoteUpdate.current) {
+        isRemoteUpdate.current = false
+        return
+      }
       const data = ydoc?.getMap('data')
       const value = JSON.stringify({elements: ev}, null, 2)
       ydoc.transact(() => {
@@ -36,6 +43,26 @@ const App = () => {
     }, 500),
     [ydoc]
   )
+
+  useEffect(() => {
+    if (excalidrawAPIRef.current && data?.elements) {
+      isRemoteUpdate.current = true
+      excalidrawAPIRef.current.updateScene({
+        elements: data.elements,
+        appState: data.appState || {}
+      })
+    }
+  }, [data])
+  
+  useEffect(() => {
+    if (diffExcalidrawAPIRef.current && data?.elements) {
+      isRemoteUpdate.current = true
+      diffExcalidrawAPIRef.current.updateScene({
+        elements: data.elements,
+        appState: data.appState || {}
+      })
+    }
+  }, [data])
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -72,6 +99,7 @@ const App = () => {
     {!data && 'Loading...'}
     {data && !diff &&
       <Excalidraw
+        excalidrawAPI={(api) => excalidrawAPIRef.current = api}
         initialData={{...data, scrollToContent: true}}
         onChange={onChange}
       />
@@ -80,12 +108,14 @@ const App = () => {
       <div style={{display: 'flex', flexFlow: 'row nowrap', width: '100%', gap: '0.5em', background: '#efefef', padding: '0.5em'}}>
         <DiffWrapper branch={meta['base-branch']}>
           <Excalidraw
+            excalidrawAPI={(api) => excalidrawAPIRef.current = api}
             viewModeEnabled
             initialData={{...diff, scrollToContent: true}}
           />
         </DiffWrapper>
         <DiffWrapper branch={meta['head-branch']}>
           <Excalidraw
+            excalidrawAPI={(api) => diffExcalidrawAPIRef.current = api}
             initialData={{...data, scrollToContent: true}}
             onChange={onChange}
           />
