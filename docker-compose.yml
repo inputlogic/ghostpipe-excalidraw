@@ -1,14 +1,14 @@
 version: '3.8'
 services:
   web:
-    image: ${REGISTRY:-registry.example.com/ghostpipe-excalidraw}:${VERSION:-latest}
+    image: ${REGISTRY}/${IMAGE_NAME}:${VERSION}
     deploy:
       update_config:
         order: start-first
       labels:
         - traefik.enable=true
         - traefik.swarm.network=traefik-public
-        - traefik.http.routers.excalidraw-web.rule=Host(`${DOMAIN:-excalidraw.example.com}`)
+        - traefik.http.routers.excalidraw-web.rule=Host(`${DOMAIN}`)
         - traefik.http.routers.excalidraw-web.entrypoints=websecure
         - traefik.http.routers.excalidraw-web.tls=true
         - traefik.http.routers.excalidraw-web.tls.certresolver=myotherresolver
