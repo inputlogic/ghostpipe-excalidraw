@@ -4,6 +4,13 @@ Excalidraw with [Ghostpipe](https://github.com/inputlogic/ghostpipe) support.
 
 ![Excalidraw Demo](demo.gif)
 
+## Try it
+
+```
+npm install -g ghostpipe
+ghostpipe https://excalidraw.ghostpipe.dev
+```
+
 ## Setup
 
 ```bash
